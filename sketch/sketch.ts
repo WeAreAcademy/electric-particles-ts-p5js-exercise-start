@@ -16,14 +16,6 @@ interface Velocity {
 let particles: Particle[] = [];
 
 
-const palette = [
-  "#aaff00",
-  "#ffaa00",
-  "#ff00aa",
-  "#aa00ff",
-  "#00aaff"
-];
-
 // Called once at the start
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -36,6 +28,7 @@ function draw() {
   moveAllParticles();
   drawAllParticles();
   drawConnectionsBetweenNearbyParticles();
+  //drawConnectionsBetweenNearbyParticlesSIMPLER();
   drawConnectionsToParticlesNearMouse();
 }
 
@@ -112,16 +105,56 @@ function randomVelocity() {
   }
 }
 
-function drawConnectionsBetweenNearbyParticles() {
-  stroke('white');
-  //TODO: YOU need to implement this function!
+function drawConnectionsBetweenNearbyParticlesSIMPLER() {
+  for(let p of particles){
+    for (let q of particles) {
+      if (p === q){
+        continue; //don't try to draw a line between a particle and itself
+      }
+      if (areNearby(p.position, q.position)) {
+        drawLineBetween(p.position, q.position, "white");
+      }
+    }
+  }
 }
 
+
+function drawConnectionsBetweenNearbyParticles() {
+  //Performance note: 
+  //To avoid wastefully comparing and connecting particle pairs multiple times (e.g. a<->b, b<->a)
+  //we'll not use for...of loops but two indices i and j
+  //j will only index particles LATER in the array than i, 
+  //so particles a, b will be selected for comparison (for example) but NEVER b, a.
+
+  for (let i = 0; i < particles.length - 1; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+
+      const p = particles[i];
+      const q = particles[j];
+
+      if (areNearby(p.position, q.position)) {
+        drawLineBetween(p.position, q.position, "white");
+      }
+    }
+  }
+}
 function drawConnectionsToParticlesNearMouse() {
-  stroke('red');
   //Draw lines from every nearby particle to the mouse pointer.
   //The mouse pointer is provided as the globals mouseX and mouseY
+  const mousePosition = { x: mouseX, y: mouseY };
+  for (let p of particles) {
+    if (areNearby(p.position, mousePosition)) {
+      drawLineBetween(p.position, mousePosition, "red");
+    }
+  }
+}
 
+function drawLineBetween(a: Position, b: Position, colourName: string): void {
+  stroke(colourName)
+  line(a.x, a.y, b.x, b.y);
+}
 
-  //TODO: YOU need to implement this function!
+function areNearby(a: Position, b: Position): boolean {
+  const distance = dist(a.x, a.y, b.x, b.y);
+  return distance < 100;
 }
